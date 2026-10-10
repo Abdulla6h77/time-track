@@ -49,7 +49,7 @@ export function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: num
   const entry = rateLimitMap.get(ip);
 
   if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    // No entry or window expired — this IP is within limits (pure read, no mutation)
     return { allowed: true };
   }
 
@@ -57,7 +57,7 @@ export function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: num
     return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
   }
 
-  entry.count += 1;
+  // Still within the window and under the limit — pure read, no mutation
   return { allowed: true };
 }
 

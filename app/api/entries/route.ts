@@ -33,7 +33,7 @@ async function checkOverlap(
   endDate: Date,
   excludeId?: string
 ): Promise<boolean> {
-  // An entry overlaps if NOT (entry.end <= newStart OR entry.start >= newEnd)
+  // Explicitly exclude running entries (end IS NULL) so they never block manual adds/edits
   const conditions = [
     not(
       or(
@@ -41,6 +41,7 @@ async function checkOverlap(
         gte(entries.start, endDate)
       )!
     ),
+    not(isNull(entries.end)),
   ];
 
   if (excludeId) {

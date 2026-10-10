@@ -11,6 +11,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Guard against missing SESSION_SECRET — an empty key would accept forged tokens
+  if (!process.env.SESSION_SECRET) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+
   const token = req.cookies.get('tt_session')?.value;
 
   if (!token) {
