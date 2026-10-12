@@ -8,6 +8,8 @@ import TodayView from '@/components/TodayView';
 import WeekView from '@/components/WeekView';
 import SummaryPanel from '@/components/SummaryPanel';
 import EntryForm from '@/components/EntryForm';
+import DaysChecklist from '@/components/DaysChecklist';
+import OffTracker, { OffDay } from '@/components/OffTracker';
 
 interface Entry {
   id: string;
@@ -18,6 +20,7 @@ interface Entry {
 
 export default function HomePage() {
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [offDays, setOffDays] = useState<OffDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -41,19 +44,38 @@ export default function HomePage() {
     }
   }, []);
 
+  const fetchOffDays = useCallback(async () => {
+    try {
+      const res = await fetch('/api/off-days');
+      if (res.ok) {
+        const data = await res.json();
+        setOffDays(data);
+      }
+    } catch {
+      // silent
+    }
+  }, []);
+
+  const handleRefreshAll = useCallback(() => {
+    fetchEntries();
+    fetchOffDays();
+  }, [fetchEntries, fetchOffDays]);
+
   useEffect(() => {
     fetchEntries();
-  }, [fetchEntries]);
+    fetchOffDays();
+  }, [fetchEntries, fetchOffDays]);
 
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         fetchEntries();
+        fetchOffDays();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [fetchEntries]);
+  }, [fetchEntries, fetchOffDays]);
 
   const runningEntry = entries.find((e) => e.end === null) ?? null;
 
@@ -80,11 +102,18 @@ export default function HomePage() {
         {runningEntry && (
           <div className="flex items-center gap-3 mb-4">
             <span className="text-sm text-gray-500 dark:text-gray-400">Running:</span>
-            <RunningTimer startISO={runningEntry.start} onRefresh={fetchEntries} />
+            <RunningTimer startISO={runningEntry.start} onRefresh={handleRefreshAll} />
           </div>
         )}
-        <ClockControls runningEntry={runningEntry} onAction={fetchEntries} />
+        <ClockControls runningEntry={runningEntry} onAction={handleRefreshAll} />
       </div>
+
+      {/* Days Checklist (Mon - Sun attendance) */}
+      <DaysChecklist
+        entries={entries}
+        offDays={offDays}
+        onAttendanceChange={fetchEntries}
+      />
 
       {/* Today view */}
       {loading ? (
@@ -95,6 +124,9 @@ export default function HomePage() {
 
       {/* Week view */}
       <WeekView entries={entries} />
+
+      {/* Off & Leave Tracker */}
+      <OffTracker offDays={offDays} onRefresh={fetchOffDays} />
 
       {/* Summary */}
       <SummaryPanel entries={entries} />
@@ -121,3 +153,4 @@ export default function HomePage() {
     </main>
   );
 }
+

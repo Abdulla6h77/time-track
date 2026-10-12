@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { entries } from '@/lib/schema';
+import { entries, attendance } from '@/lib/schema';
 import { isNull } from 'drizzle-orm';
+import { format } from 'date-fns';
 
 const clockInSchema = z.object({
   task: z.string().optional().default(''),
@@ -37,5 +38,20 @@ export async function POST(req: NextRequest) {
     .values({ start: new Date(), task: parsed.data.task })
     .returning();
 
+  // Auto-record office attendance for today
+  try {
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    await db
+      .insert(attendance)
+      .values({ date: todayStr, attended: true })
+      .onConflictDoUpdate({
+        target: attendance.date,
+        set: { attended: true, updated_at: new Date() },
+      });
+  } catch {
+    // Non-blocking if attendance write fails
+  }
+
   return NextResponse.json(newEntry);
 }
+

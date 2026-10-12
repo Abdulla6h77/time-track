@@ -70,5 +70,7 @@ On mobile (Chrome/Safari): open the app, then use your browser's "Add to Home Sc
 - **Week view** — progress toward 40h goal with a progress bar
 - **Manual entries** — add, edit, and delete entries (handles forgotten clock-outs)
 - **End-of-day summary** — generates a formatted timesheet, one-click copy
+- **Office Days Checklist** — Mon to Sun attendance checkboxes with week navigation, auto-checks on clock in, with manual toggle support
+- **Off & Leave Tracker** — log paid and unpaid leaves, tracks leave history, and calculates remaining paid leave quota in real time
 - **Dark mode** — automatic via `prefers-color-scheme`
 - **Password protection** — single-user auth with rate limiting
